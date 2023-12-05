@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="chatgpt.js"></script>
+</head>
+<body>
+    <h2></h2>
+    <button onclick="clearAll()">Стерти все</button>
+    <form action="javascript:void(1000)">
+        <div class="input-container">
+            <i class="fa fa-user icon"></i>
+            <textarea name="" id="convert_text"></textarea>
+
+        </div>
+        </div>
+    <button id="click_to_record">Ввести голосом</button>
+        
+        <button type="submit"
+                id="sendBtn"
+                class="btn">відправити</button>
+    </form>
+    <form>
+        <label for="language">Виберіть мову:</label>
+        <select id="language" name="language">
+          <option value="en-EN">English</option>
+          <option value="uk-UK">Українська</option>
+          <option value="ru-RU">Русский</option>
+        </select>
+      </form>
+
+    <div id="loadingContainer"
+         class="container darker d-none">
+        <p>Роздум...</p>
+    </div>
+    <div id="chatOutput"></div>
+
+<script>
+function clearAll(chatMessageElem) {
+    document.getElementById("convert_text").value = "";
+}
+</script>
+
+    <script >
+window.onload = function () {
+    const CHATGPT_API_KEY = "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";
+    const CHATGPT_API_URL = "https://api.openai.com/v1/chat/completions";
+var sendBtnElem = document.getElementById("sendBtn");
+    var chatMessageElem = document.getElementById("convert_text");
+    var chatOutputElem = document.getElementById("chatOutput");
+    var loadingContainerElem = document.getElementById("loadingContainer");
+    sendBtnElem.addEventListener("click", function () {
+        var message = chatMessageElem.value;
+        if (message != null && message != "") {
+            generateUserChatBubble(message);
+            loadingContainerElem.classList.remove("d-none");
+            sendChatGPTMessage(message, generateAIChatBubble);
+            chatMessageElem.value = "";
+        } else {
+            alert("Ведіть повідомлення.");
+        }
+    });
+    function generateUserChatBubble(message) {
+        // Create a new chat bubble wrapper.
+        var chatBubbleElem = document.createElement("div");
+        chatBubbleElem.classList.add("container");
+        chatBubbleElem.classList.add("user-container");
+        // Create the message container.
+        var chatMessageElem = document.createElement("p");
+        chatMessageElem.innerHTML = message;
+        chatBubbleElem.appendChild(chatMessageElem);
+        chatOutputElem.prepend(chatBubbleElem);
+    }
+    function generateAIChatBubble(message) {
+        // Create a new chat bubble wrapper.
+        var chatBubbleElem = document.createElement("div");
+        chatBubbleElem.classList.add("container");
+        chatBubbleElem.classList.add("darker");
+        // Create the message container.
+        var chatMessageElem = document.createElement("p");
+        chatMessageElem.innerHTML = message;
+        chatBubbleElem.appendChild(chatMessageElem);
+        chatOutputElem.prepend(chatBubbleElem);
+        loadingContainerElem.classList.add("d-none");
+    }
+    function sendChatGPTMessage(message, onSuccessCallback) {
+        var messageBody = {
+            "model": "gpt-3.5-turbo",
+            "messages": [{
+                "role": "user",
+                "content": message.trim()
+            }]
+        };
+        const xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            // Parse the response body into JSON object.
+            var responseBodyObj = JSON.parse(this.responseText);
+            // I'm cheating a little as I know which property I need. I recommend making this more robust.
+            // If you want to see the response object itself then log it to the console and learn!
+            onSuccessCallback(responseBodyObj.choices[0].message.content);
+        }
+        xhttp.open("POST", CHATGPT_API_URL, true);
+        // Some simple headers are required for this to work properly with their API.
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.setRequestHeader("Authorization", "Bearer " + CHATGPT_API_KEY);
+        xhttp.send(JSON.stringify(messageBody));
+    }
+
+
+    click_to_record.addEventListener('click',function(){
+            var speech = true;
+            window.SpeechRecognition = window.webkitSpeechRecognition;
+        
+            const recognition = new SpeechRecognition();
+            recognition.interimResults = true;
+
+            recognition.lang = document.getElementById("language").value;
+
+
+        
+            recognition.addEventListener('result', e => {
+                const transcript = Array.from(e.results)
+                    .map(result => result[0])
+                    .map(result => result.transcript)
+                    .join('')
+
+                    document.getElementById("convert_text").value = transcript;
+            });
+            
+            if (speech == true) {
+                recognition.start();
+            }
+        })
+};
+</script>
+</body>
+</html>
